@@ -333,12 +333,25 @@ function init() {
     updateStats();
     markModified();
   });
+  
+  // 初始化图片粘贴功能
+  setupImagePaste();
 }
 
 // 更新预览
 function updatePreview() {
   const markdown = editor.getValue();
-  previewContent.innerHTML = marked.parse(markdown);
+  let html = marked.parse(markdown);
+  
+  // 处理相对路径的图片，转换为 file:// 协议
+  if (currentDocPath) {
+    const baseDir = currentDocPath.substring(0, currentDocPath.lastIndexOf('/'));
+    html = html.replace(/src="(?!http|file:|data:)([^"]+)"/g, (match, p1) => {
+      return `src="file://${baseDir}/${p1}"`;
+    });
+  }
+  
+  previewContent.innerHTML = html;
 }
 
 // 更新统计信息
@@ -665,58 +678,91 @@ if (saveSettingsBtn) {
 
 // ========== 图片粘贴功能 ==========
 
-// 监听粘贴事件 (CodeMirror)
-editor.on('paste', async (cm, e) => {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  
-  for (const item of items) {
-    if (item.type.startsWith('image/')) {
-      e.preventDefault();
-      
-      const file = item.getAsFile();
-      if (!file) continue;
-      
-      setStatus('正在处理图片...');
-      
-      try {
-        // 将图片转为 base64
-        const dataUrl = await fileToDataUrl(file);
-        
-        // 获取设置
-        const settings = await ipcRenderer.invoke('get-settings');
-        
-        let imageUrl;
-        
-        if (settings.imageStorageType === 'local') {
-          // 保存到本地
-          const docPath = await ipcRenderer.invoke('get-current-file-path');
-          imageUrl = await ipcRenderer.invoke('save-pasted-image', dataUrl, docPath);
-          currentDocPath = docPath;
-        } else {
-          // 上传到图床
-          if (!settings.imgbedToken) {
-            setStatus('请先在设置中配置图床 Token');
-            return;
-          }
-          imageUrl = await ipcRenderer.invoke('upload-to-imgbed', dataUrl);
-        }
-        
-        // 插入 Markdown 图片语法
-        const markdownImage = `![image](${imageUrl})`;
-        insertAtCursor(markdownImage);
-        setStatus('图片已插入');
-        markModified();
-        
-      } catch (err) {
-        console.error('处理图片失败:', err);
-        setStatus('图片处理失败: ' + err.message);
-      }
-      
+// 设置图片粘贴功能
+function setupImagePaste() {
+  // 在 document 级别监听粘贴事件
+  document.addEventListener('paste', async (e) => {
+    // 检查焦点是否在编辑器中
+    if (!editor.hasFocus()) return;
+    
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) {
+      console.log('No clipboardData');
       return;
     }
-  }
-});
+    
+    const items = clipboardData.items;
+    if (!items || items.length === 0) {
+      console.log('No items in clipboard');
+      return;
+    }
+    
+    console.log('Clipboard items:', items.length);
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      console.log('Item type:', item.type);
+      
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const file = item.getAsFile();
+        if (!file) {
+          console.log('Could not get file from item');
+          continue;
+        }
+        
+        console.log('Got image file:', file.name, file.size);
+        setStatus('正在处理图片...');
+        
+        try {
+          // 将图片转为 base64
+          const dataUrl = await fileToDataUrl(file);
+          console.log('Converted to dataUrl, length:', dataUrl.length);
+          
+          // 获取设置
+          const settings = await ipcRenderer.invoke('get-settings');
+          console.log('Settings:', settings.imageStorageType);
+          
+          let imageUrl;
+          
+          if (settings.imageStorageType === 'local') {
+            // 保存到本地
+            const docPath = await ipcRenderer.invoke('get-current-file-path');
+            console.log('Doc path:', docPath);
+          const result = await ipcRenderer.invoke('save-pasted-image', dataUrl, docPath);
+          console.log('Saved image:', result);
+          imageUrl = result.relativePath;
+          if (docPath) {
+            currentDocPath = docPath;
+          }
+          } else {
+            // 上传到图床
+            if (!settings.imgbedToken) {
+              setStatus('请先在设置中配置图床 Token');
+              return;
+            }
+            imageUrl = await ipcRenderer.invoke('upload-to-imgbed', dataUrl);
+          }
+          
+          // 插入 Markdown 图片语法
+          const markdownImage = `![image](${imageUrl})`;
+          editor.replaceSelection(markdownImage);
+          setStatus('图片已插入');
+          markModified();
+          updatePreview();
+          
+        } catch (err) {
+          console.error('处理图片失败:', err);
+          setStatus('图片处理失败: ' + err.message);
+        }
+        
+        return;
+      }
+    }
+  }, true); // 使用捕获阶段
+}
 
 // 文件转 DataURL
 function fileToDataUrl(file) {

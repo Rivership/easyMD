@@ -271,11 +271,14 @@ ipcMain.handle('save-pasted-image', async (event, imageDataUrl, docFilePath) => 
   try {
     // 确定保存目录
     let imageDir;
+    let baseDir;
     if (docFilePath) {
-      imageDir = path.join(path.dirname(docFilePath), 'image');
+      baseDir = path.dirname(docFilePath);
+      imageDir = path.join(baseDir, 'image');
     } else {
       // 如果文档未保存，保存到用户文档目录
-      imageDir = path.join(app.getPath('documents'), 'easyMD-images');
+      baseDir = app.getPath('documents');
+      imageDir = path.join(baseDir, 'easyMD-images');
     }
     
     // 确保目录存在
@@ -295,11 +298,11 @@ ipcMain.handle('save-pasted-image', async (event, imageDataUrl, docFilePath) => 
     // 写入文件
     fs.writeFileSync(filePath, buffer);
     
-    // 返回相对路径（相对于文档目录）
+    // 返回相对路径和基础目录
     if (docFilePath) {
-      return `image/${fileName}`;
+      return { relativePath: `image/${fileName}`, baseDir: baseDir };
     } else {
-      return filePath;
+      return { relativePath: `easyMD-images/${fileName}`, baseDir: baseDir };
     }
   } catch (err) {
     console.error('保存图片失败:', err);
