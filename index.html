@@ -18,7 +18,17 @@
                 <span id="fileModified" class="modified-indicator"></span>
             </div>
             <div class="titlebar-actions">
-                <button id="toggleBtn" class="titlebar-btn" title="当前：编辑+预览 (Cmd+E)">
+                <!-- 编辑模式切换：所见即所得 / 源码 -->
+                <div class="mode-switch">
+                    <button id="wysiwygModeBtn" class="mode-btn active" data-tooltip="所见即所得模式">
+                        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/></svg>
+                    </button>
+                    <button id="sourceModeBtn" class="mode-btn" data-tooltip="源码模式">
+                        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+                <div class="titlebar-divider"></div>
+                <button id="toggleBtn" class="titlebar-btn" data-tooltip="当前：编辑+预览 (Cmd+E)">
                     <svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="8" height="18" rx="1" fill="currentColor"/><rect x="14" y="3" width="8" height="18" rx="1" fill="currentColor" opacity="0.4"/></svg>
                 </button>
             </div>
@@ -28,7 +38,7 @@
         <div class="format-toolbar">
             <!-- 标题下拉菜单 -->
             <div class="dropdown">
-                <button class="format-btn dropdown-toggle" id="headingBtn" title="标题">
+                <button class="format-btn dropdown-toggle" id="headingBtn" data-tooltip="标题">
                     <span>H</span>
                     <small>▼</small>
                 </button>
@@ -41,55 +51,64 @@
                     <button data-format="h6">六级标题</button>
                 </div>
             </div>
+            <button class="format-btn" data-format="paragraph" data-tooltip="正文">
+                <span style="font-size: 12px;">P</span>
+            </button>
             
             <div class="format-divider"></div>
             
             <!-- 文字格式 -->
-            <button class="format-btn" data-format="bold" title="加粗 (Cmd+B)">
+            <button class="format-btn" data-format="bold" data-tooltip="加粗 (Cmd+B)">
                 <strong>B</strong>
             </button>
-            <button class="format-btn" data-format="italic" title="斜体 (Cmd+I)">
+            <button class="format-btn" data-format="italic" data-tooltip="斜体 (Cmd+I)">
                 <em>I</em>
             </button>
-            <button class="format-btn" data-format="strikethrough" title="删除线">
+            <button class="format-btn" data-format="strikethrough" data-tooltip="删除线">
                 <s>S</s>
             </button>
-            <button class="format-btn" data-format="code" title="行内代码">
+            <button class="format-btn" data-format="code" data-tooltip="行内代码">
                 <code>&lt;/&gt;</code>
             </button>
             
             <div class="format-divider"></div>
             
             <!-- 列表 -->
-            <button class="format-btn" data-format="ul" title="无序列表">
+            <button class="format-btn" data-format="ul" data-tooltip="无序列表">
                 <span>≡</span>
             </button>
-            <button class="format-btn" data-format="ol" title="有序列表">
+            <button class="format-btn" data-format="ol" data-tooltip="有序列表">
                 <span>1.</span>
             </button>
-            <button class="format-btn" data-format="task" title="任务列表">
+            <button class="format-btn" data-format="task" data-tooltip="任务列表">
                 <span>☑</span>
             </button>
             
             <div class="format-divider"></div>
             
             <!-- 其他格式 -->
-            <button class="format-btn" data-format="quote" title="引用">
+            <button class="format-btn" data-format="quote" data-tooltip="引用">
                 <span>❝</span>
             </button>
-            <button class="format-btn" data-format="link" title="链接">
+            <button class="format-btn" data-format="link" data-tooltip="链接">
                 <span>🔗</span>
             </button>
-            <button class="format-btn" data-format="image" title="图片">
+            <button class="format-btn" data-format="image" data-tooltip="图片">
                 <span>🖼️</span>
             </button>
-            <button class="format-btn" data-format="codeblock" title="代码块">
+            <button class="format-btn" data-format="codeblock" data-tooltip="代码块">
                 <span>{ }</span>
             </button>
-            <button class="format-btn" data-format="table" title="表格">
-                <span>▦</span>
+            <button class="format-btn" data-format="table" data-tooltip="表格">
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <rect x="1" y="2" width="14" height="12" rx="1"/>
+                    <line x1="1" y1="6" x2="15" y2="6"/>
+                    <line x1="1" y1="10" x2="15" y2="10"/>
+                    <line x1="6" y1="2" x2="6" y2="14"/>
+                    <line x1="11" y1="2" x2="11" y2="14"/>
+                </svg>
             </button>
-            <button class="format-btn" data-format="hr" title="分割线">
+            <button class="format-btn" data-format="hr" data-tooltip="分割线">
                 <span>―</span>
             </button>
         </div>
@@ -173,13 +192,24 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/java.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/cpp.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js"></script>
+    <!-- highlight.js 完整版支持更多语言 -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/go.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/rust.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/swift.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/kotlin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/ruby.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/php.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/sql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/markdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/dockerfile.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/scss.min.js"></script>
     <script src="renderer.js"></script>
 </body>
 </html>

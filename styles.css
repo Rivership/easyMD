@@ -58,7 +58,52 @@ body {
     transform: translateY(-50%);
     display: flex;
     gap: 8px;
+    align-items: center;
     -webkit-app-region: no-drag;
+}
+
+/* 模式切换按钮组 */
+.mode-switch {
+    display: flex;
+    background: #e8e8e8;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.15s;
+}
+
+.mode-btn:hover {
+    color: #333;
+}
+
+.mode-btn.active {
+    background: #fff;
+    color: #0066cc;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.mode-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.titlebar-divider {
+    width: 1px;
+    height: 20px;
+    background: #d0d0d0;
+    margin: 0 4px;
 }
 
 .titlebar-btn {
@@ -148,6 +193,59 @@ body {
     height: 20px;
     background: #d0d0d0;
     margin: 0 6px;
+}
+
+/* 自定义 Tooltip */
+.format-btn[data-tooltip],
+.titlebar-btn[data-tooltip] {
+    position: relative;
+}
+
+.format-btn[data-tooltip]::after,
+.titlebar-btn[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    font-size: 12px;
+    font-weight: normal;
+    white-space: nowrap;
+    border-radius: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s, visibility 0.15s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.format-btn[data-tooltip]::before,
+.titlebar-btn[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 4px;
+    border: 4px solid transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.85);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s, visibility 0.15s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.format-btn[data-tooltip]:hover::after,
+.format-btn[data-tooltip]:hover::before,
+.titlebar-btn[data-tooltip]:hover::after,
+.titlebar-btn[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* 下拉菜单 */
@@ -475,37 +573,268 @@ body {
     color: #555;
 }
 
+/* 行内代码 - Typora 风格 */
 .markdown-body code {
     padding: 2px 6px;
-    background: #f5f5f5;
-    border: 1px solid #e0e0e0;
-    border-radius: 3px;
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    background: #f3f4f4;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
     font-size: 0.9em;
-    color: #c7254e;
+    color: #e83e8c;
+    border: none;
 }
 
-.markdown-body pre {
+/* 代码块包装器 - Typora 风格 */
+.code-block-wrapper {
+    position: relative;
     margin: 1em 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1e1e1e;
+    border: 1px solid #333;
+}
+
+/* 代码块头部 */
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #404040;
+}
+
+.code-lang-label {
+    font-size: 12px;
+    color: #888;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.code-lang-label:hover {
+    background: #404040;
+    color: #fff;
+}
+
+/* 语言选择器下拉框 */
+.lang-selector-dropdown {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    width: 200px;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.lang-search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-bottom: 1px solid #404040;
+    background: #1e1e1e;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.lang-search-input::placeholder {
+    color: #666;
+}
+
+.lang-list-container {
+    overflow-y: auto;
+    max-height: 240px;
+}
+
+.lang-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 13px;
+    transition: background 0.1s;
+}
+
+.lang-item:hover {
+    background: #3c3c3c;
+    color: #fff;
+}
+
+.lang-item.selected {
+    background: #0e639c;
+    color: #fff;
+}
+
+.lang-item.custom-lang {
+    color: #4fc1ff;
+    font-style: italic;
+    border-top: 1px solid #404040;
+}
+
+.code-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.15s;
+}
+
+.code-copy-btn:hover {
+    background: #404040;
+    color: #fff;
+}
+
+/* 代码块 */
+.markdown-body .code-block-wrapper pre {
+    margin: 0;
     padding: 16px;
-    background: #f6f8fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
+    background: #1e1e1e;
+    border: none;
+    border-radius: 0;
     overflow-x: auto;
 }
 
-.markdown-body pre code {
+.markdown-body .code-block-wrapper pre code {
     padding: 0;
     background: none;
     border: none;
-    color: inherit;
-    font-size: 0.9em;
+    color: #d4d4d4;
+    font-family: 'SF Mono', 'Monaco', 'Menlo', 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 兼容旧的 pre 样式 */
+.markdown-body pre:not(.code-block-wrapper pre) {
+    margin: 1em 0;
+    padding: 16px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.markdown-body pre:not(.code-block-wrapper pre) code {
+    padding: 0;
+    background: none;
+    border: none;
+    color: #d4d4d4;
+    font-size: 14px;
+}
+
+/* highlight.js 深色主题覆盖 */
+.hljs {
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+}
+
+/* 关键字 */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name {
+    color: #569cd6 !important;
+}
+
+/* 字符串 */
+.hljs-string,
+.hljs-attr,
+.hljs-symbol,
+.hljs-bullet {
+    color: #ce9178 !important;
+}
+
+/* 数字 */
+.hljs-number,
+.hljs-literal {
+    color: #b5cea8 !important;
+}
+
+/* 函数 */
+.hljs-title,
+.hljs-section {
+    color: #dcdcaa !important;
+}
+
+/* 类型 */
+.hljs-type,
+.hljs-class .hljs-title {
+    color: #4ec9b0 !important;
+}
+
+/* 注释 */
+.hljs-comment,
+.hljs-quote {
+    color: #6a9955 !important;
+    font-style: italic;
+}
+
+/* 变量 */
+.hljs-variable,
+.hljs-template-variable {
+    color: #9cdcfe !important;
+}
+
+/* 标签 */
+.hljs-tag {
+    color: #808080 !important;
+}
+
+.hljs-tag .hljs-name {
+    color: #569cd6 !important;
+}
+
+.hljs-tag .hljs-attr {
+    color: #9cdcfe !important;
+}
+
+/* 属性 */
+.hljs-attribute {
+    color: #9cdcfe !important;
+}
+
+/* 正则表达式 */
+.hljs-regexp {
+    color: #d16969 !important;
+}
+
+/* 元信息 */
+.hljs-meta {
+    color: #c586c0 !important;
+}
+
+/* 删除/添加 (diff) */
+.hljs-deletion {
+    color: #ce9178 !important;
+    background: rgba(206, 145, 120, 0.1);
+}
+
+.hljs-addition {
+    color: #b5cea8 !important;
+    background: rgba(181, 206, 168, 0.1);
 }
 
 .markdown-body table {
     margin: 1em 0;
     border-collapse: collapse;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
+    table-layout: auto;
+    display: table;
 }
 
 .markdown-body table th,
@@ -513,11 +842,33 @@ body {
     padding: 8px 12px;
     border: 1px solid #e0e0e0;
     text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    vertical-align: middle;
+    min-width: 60px;
+    box-sizing: border-box;
+    display: table-cell;
+    position: static;
 }
 
 .markdown-body table th {
     background: #f5f5f5;
     font-weight: 600;
+}
+
+/* WYSIWYG 模式下可编辑表格单元格 */
+.markdown-body table th[contenteditable="true"],
+.markdown-body table td[contenteditable="true"] {
+    outline: none;
+    cursor: text;
+    position: static;
+}
+
+.markdown-body table th[contenteditable="true"]:focus,
+.markdown-body table td[contenteditable="true"]:focus {
+    background: #e3f2fd;
+    box-shadow: inset 0 0 0 2px #2196f3;
 }
 
 .markdown-body table tr:nth-child(even) {
@@ -760,4 +1111,355 @@ body {
 
 .btn-primary:active {
     background: #004488;
+}
+
+/* 图片调整大小功能 */
+.image-resizer-wrapper {
+    display: inline-block;
+    position: relative;
+    max-width: 100%;
+    margin: 8px 0;
+}
+
+.image-resizer-wrapper img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    transition: box-shadow 0.2s;
+}
+
+.image-resizer-wrapper:hover img {
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.3);
+}
+
+.image-resizer-wrapper.resizing img {
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.6);
+}
+
+.image-resize-handle {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 16px;
+    height: 16px;
+    background: #0066cc;
+    border-radius: 3px;
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.image-resize-handle::before {
+    content: '';
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+}
+
+.image-resizer-wrapper:hover .image-resize-handle,
+.image-resizer-wrapper.resizing .image-resize-handle {
+    opacity: 1;
+}
+
+.image-size-label {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    display: none;
+    z-index: 10;
+}
+
+.image-resizer-wrapper.resizing .image-size-label {
+    display: block;
+}
+
+/* 表格编辑功能 - Typora 风格 */
+.table-editor-wrapper {
+    position: relative;
+    margin: 16px auto;
+    padding: 0;
+    width: fit-content;
+    max-width: 100%;
+    display: block;
+}
+
+.table-editor-wrapper table {
+    border-collapse: collapse;
+    width: auto;
+    min-width: 200px;
+    table-layout: auto;
+    display: table;
+    margin-left: 16px;
+    margin-top: 16px;
+}
+
+.table-editor-wrapper th,
+.table-editor-wrapper td {
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    min-width: 60px;
+    outline: none;
+    transition: background 0.15s;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    vertical-align: middle;
+    text-align: left;
+    box-sizing: border-box;
+    position: static;
+    display: table-cell;
+}
+
+.table-editor-wrapper th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+.table-editor-wrapper td:focus,
+.table-editor-wrapper th:focus,
+.table-editor-wrapper .cell-active {
+    background: #e3f2fd;
+    box-shadow: inset 0 0 0 2px #2196f3;
+}
+
+/* 确保可编辑单元格的内容正确显示 */
+.table-editor-wrapper th[contenteditable="true"],
+.table-editor-wrapper td[contenteditable="true"] {
+    min-height: 1.5em;
+    line-height: 1.5;
+    cursor: text;
+    -webkit-user-modify: read-write;
+    position: static;
+}
+
+.table-editor-wrapper .row-highlight td,
+.table-editor-wrapper .row-highlight th {
+    background: #f5f5f5;
+}
+
+.table-editor-wrapper .col-highlight {
+    background: #f5f5f5;
+}
+
+.table-editor-wrapper .cell-active.row-highlight,
+.table-editor-wrapper .cell-active.col-highlight {
+    background: #e3f2fd;
+}
+
+/* 行控制按钮容器（左侧 + 按钮） */
+.table-row-controls {
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 16px;
+    height: calc(100% - 16px);
+}
+
+/* 列控制按钮容器（顶部 + 按钮） */
+.table-col-controls {
+    position: absolute;
+    left: 16px;
+    top: 0;
+    height: 16px;
+    display: flex;
+}
+
+/* 添加按钮 */
+.table-add-btn {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: none;
+    background: transparent;
+    color: #999;
+    font-size: 16px;
+    line-height: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: all 0.15s;
+    border-radius: 50%;
+}
+
+.table-editor-wrapper:hover .table-add-btn {
+    opacity: 0.5;
+}
+
+.table-add-btn:hover {
+    opacity: 1 !important;
+    background: #4caf50;
+    color: #fff;
+    transform: scale(1.2);
+}
+
+.col-add-btn {
+    top: -16px;
+}
+
+.row-add-btn {
+    left: -4px;
+}
+
+/* 右键菜单 */
+.table-context-menu {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 4px 0;
+    z-index: 10000;
+    min-width: 160px;
+    font-size: 13px;
+}
+
+.table-context-menu .menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.1s;
+    color: #333;
+}
+
+.table-context-menu .menu-item:hover {
+    background: #f0f0f0;
+}
+
+.table-context-menu .menu-item.danger {
+    color: #d32f2f;
+}
+
+.table-context-menu .menu-item.danger:hover {
+    background: #ffebee;
+}
+
+.table-context-menu .menu-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 4px 0;
+}
+
+/* 列宽拖动手柄 */
+.col-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.15s;
+    z-index: 5;
+}
+
+.col-resizer:hover {
+    background: #2196f3;
+}
+
+/* WYSIWYG 所见即所得模式 */
+.wysiwyg-mode .preview-pane {
+    flex: 1 !important;
+    max-width: none !important;
+}
+
+.wysiwyg-mode .editor-pane,
+.wysiwyg-mode .resizer {
+    display: none !important;
+}
+
+.wysiwyg-mode .preview-paper {
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+.wysiwyg-editable {
+    outline: none;
+    cursor: text;
+}
+
+.wysiwyg-editable:focus {
+    outline: none;
+}
+
+/* WYSIWYG 模式下的元素样式 */
+.wysiwyg-editable h1,
+.wysiwyg-editable h2,
+.wysiwyg-editable h3,
+.wysiwyg-editable h4,
+.wysiwyg-editable h5,
+.wysiwyg-editable h6 {
+    position: relative;
+}
+
+.wysiwyg-editable h1:focus,
+.wysiwyg-editable h2:focus,
+.wysiwyg-editable h3:focus,
+.wysiwyg-editable h4:focus,
+.wysiwyg-editable h5:focus,
+.wysiwyg-editable h6:focus {
+    background: rgba(0, 102, 204, 0.05);
+    border-radius: 4px;
+}
+
+.wysiwyg-editable p:focus,
+.wysiwyg-editable li:focus,
+.wysiwyg-editable blockquote:focus {
+    background: rgba(0, 102, 204, 0.03);
+    border-radius: 4px;
+}
+
+/* WYSIWYG 模式下代码块可编辑 */
+.wysiwyg-editable .code-block-wrapper {
+    position: relative;
+}
+
+.wysiwyg-editable .code-block-wrapper pre {
+    position: relative;
+}
+
+.wysiwyg-editable .code-block-wrapper pre code {
+    outline: none;
+    display: block;
+    white-space: pre;
+}
+
+.wysiwyg-editable .code-block-wrapper:focus-within {
+    box-shadow: 0 0 0 2px rgba(86, 156, 214, 0.5);
+}
+
+.wysiwyg-editable pre {
+    position: relative;
+}
+
+.wysiwyg-editable pre code {
+    outline: none;
+}
+
+.wysiwyg-editable pre:focus-within {
+    box-shadow: 0 0 0 2px rgba(86, 156, 214, 0.5);
+}
+
+/* WYSIWYG 模式下链接可编辑 */
+.wysiwyg-editable a {
+    cursor: text;
+}
+
+/* 源码模式隐藏视图切换按钮的预览相关功能 */
+.source-mode .titlebar-btn[id="toggleBtn"] {
+    display: flex;
 }

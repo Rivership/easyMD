@@ -24,3 +24,4 @@ icon_old.png
 # Temporary files
 *.tmp
 *.temp
+node_modules

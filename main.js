@@ -274,7 +274,7 @@ ipcMain.handle('save-pasted-image', async (event, imageDataUrl, docFilePath) => 
     let baseDir;
     if (docFilePath) {
       baseDir = path.dirname(docFilePath);
-      imageDir = path.join(baseDir, 'image');
+      imageDir = path.join(baseDir, 'images');
     } else {
       // 如果文档未保存，保存到用户文档目录
       baseDir = app.getPath('documents');
@@ -300,7 +300,7 @@ ipcMain.handle('save-pasted-image', async (event, imageDataUrl, docFilePath) => 
     
     // 返回相对路径和基础目录
     if (docFilePath) {
-      return { relativePath: `image/${fileName}`, baseDir: baseDir };
+      return { relativePath: `images/${fileName}`, baseDir: baseDir };
     } else {
       return { relativePath: `easyMD-images/${fileName}`, baseDir: baseDir };
     }
