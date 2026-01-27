@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Markdown 编辑器</title>
+    <link rel="stylesheet" href="node_modules/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题栏 -->
+        <div class="titlebar">
+            <div class="titlebar-drag"></div>
+            <div class="titlebar-title">
+                <span id="fileName">未命名.md</span>
+                <span id="fileModified" class="modified-indicator"></span>
+            </div>
+            <div class="titlebar-actions">
+                <button id="toggleBtn" class="titlebar-btn" title="当前：编辑+预览 (Cmd+E)">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="8" height="18" rx="1" fill="currentColor"/><rect x="14" y="3" width="8" height="18" rx="1" fill="currentColor" opacity="0.4"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 格式工具栏 -->
+        <div class="format-toolbar">
+            <!-- 标题下拉菜单 -->
+            <div class="dropdown">
+                <button class="format-btn dropdown-toggle" id="headingBtn" title="标题">
+                    <span>H</span>
+                    <small>▼</small>
+                </button>
+                <div class="dropdown-menu" id="headingMenu">
+                    <button data-format="h1">一级标题</button>
+                    <button data-format="h2">二级标题</button>
+                    <button data-format="h3">三级标题</button>
+                    <button data-format="h4">四级标题</button>
+                    <button data-format="h5">五级标题</button>
+                    <button data-format="h6">六级标题</button>
+                </div>
+            </div>
+            
+            <div class="format-divider"></div>
+            
+            <!-- 文字格式 -->
+            <button class="format-btn" data-format="bold" title="加粗 (Cmd+B)">
+                <strong>B</strong>
+            </button>
+            <button class="format-btn" data-format="italic" title="斜体 (Cmd+I)">
+                <em>I</em>
+            </button>
+            <button class="format-btn" data-format="strikethrough" title="删除线">
+                <s>S</s>
+            </button>
+            <button class="format-btn" data-format="code" title="行内代码">
+                <code>&lt;/&gt;</code>
+            </button>
+            
+            <div class="format-divider"></div>
+            
+            <!-- 列表 -->
+            <button class="format-btn" data-format="ul" title="无序列表">
+                <span>≡</span>
+            </button>
+            <button class="format-btn" data-format="ol" title="有序列表">
+                <span>1.</span>
+            </button>
+            <button class="format-btn" data-format="task" title="任务列表">
+                <span>☑</span>
+            </button>
+            
+            <div class="format-divider"></div>
+            
+            <!-- 其他格式 -->
+            <button class="format-btn" data-format="quote" title="引用">
+                <span>❝</span>
+            </button>
+            <button class="format-btn" data-format="link" title="链接">
+                <span>🔗</span>
+            </button>
+            <button class="format-btn" data-format="image" title="图片">
+                <span>🖼️</span>
+            </button>
+            <button class="format-btn" data-format="codeblock" title="代码块">
+                <span>{ }</span>
+            </button>
+            <button class="format-btn" data-format="table" title="表格">
+                <span>▦</span>
+            </button>
+            <button class="format-btn" data-format="hr" title="分割线">
+                <span>―</span>
+            </button>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 编辑器 -->
+            <div class="editor-pane" id="editorPane">
+                <div id="editor"></div>
+            </div>
+
+            <!-- 可拖拽分割线 -->
+            <div class="resizer" id="resizer"></div>
+
+            <!-- 预览区 -->
+            <div class="preview-pane" id="previewPane">
+                <div id="preview">
+                    <div class="preview-paper markdown-body" id="previewContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="statusbar">
+            <div class="statusbar-left">
+                <span id="lineCount">行: 1</span>
+                <span id="wordCount">字数: 0</span>
+                <span id="charCount">字符: 0</span>
+            </div>
+            <div class="statusbar-right">
+                <span id="status">就绪</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打印专用的隐藏区域 -->
+    <div id="printArea" style="display: none;"></div>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>设置</h3>
+                <button class="modal-close" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <h4>🖼️ 图片存储</h4>
+                    <div class="setting-item">
+                        <label>粘贴图片时：</label>
+                        <select id="imageStorageType">
+                            <option value="local">保存到本地 (image 文件夹)</option>
+                            <option value="imgbed">上传到图床</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-group" id="imgbedSettings" style="display: none;">
+                    <h4>🌐 图床配置</h4>
+                    <div class="setting-item">
+                        <label>图床类型：</label>
+                        <select id="imgbedType">
+                            <option value="smms">SM.MS</option>
+                            <option value="imgur">Imgur</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>API Token：</label>
+                        <input type="password" id="imgbedToken" placeholder="输入你的 API Token">
+                    </div>
+                    <div class="setting-item" id="customUrlSetting" style="display: none;">
+                        <label>自定义上传 URL：</label>
+                        <input type="text" id="imgbedCustomUrl" placeholder="https://your-imgbed.com/upload">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettings" class="btn-primary">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/cpp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/html.min.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
