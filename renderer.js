@@ -18,7 +18,6 @@ const preview = document.getElementById('preview');
 const previewContent = document.getElementById('previewContent');
 const editorPane = document.getElementById('editorPane');
 const previewPane = document.getElementById('previewPane');
-const toggleBtn = document.getElementById('toggleBtn');
 const fileName = document.getElementById('fileName');
 const fileModified = document.getElementById('fileModified');
 const lineCount = document.getElementById('lineCount');
@@ -92,8 +91,11 @@ turndownService.addRule('codeBlockWrapper', {
   replacement: function(content, node) {
     const lang = node.dataset.lang || '';
     const codeElement = node.querySelector('code');
-    const code = codeElement ? codeElement.textContent : '';
-    return '\n```' + lang + '\n' + code + '\n```\n';
+    // 使用 textContent 获取纯文本（会自动去除所有 HTML 标签）
+    let code = codeElement ? codeElement.textContent : '';
+    // 确保代码末尾没有多余的换行
+    code = code.replace(/\n$/, '');
+    return '\n\n```' + lang + '\n' + code + '\n```\n\n';
   }
 });
 
@@ -562,7 +564,7 @@ renderer.code = function(token) {
         '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>' +
       '</button>' +
     '</div>' +
-    '<pre class="' + langClass + '"><code class="' + langClass + '">' + highlightedCode + '</code></pre>' +
+    '<pre class="' + langClass + '" contenteditable="false"><code class="' + langClass + '" contenteditable="true" spellcheck="false">' + highlightedCode + '</code></pre>' +
   '</div>';
 };
 
@@ -724,6 +726,11 @@ function selectLanguage(langValue, langLabel, wrapper, dropdown) {
   preEl.className = langValue ? 'language-' + langValue : '';
   codeEl.className = langValue ? 'language-' + langValue : '';
   
+  // 保持 contenteditable 属性
+  preEl.setAttribute('contenteditable', 'false');
+  codeEl.setAttribute('contenteditable', 'true');
+  codeEl.setAttribute('spellcheck', 'false');
+  
   // 重新高亮
   if (langValue && typeof hljs !== 'undefined' && hljs.getLanguage(langValue)) {
     try {
@@ -758,6 +765,9 @@ let isEditingTable = false;
 // 标记是否正在从 WYSIWYG 同步到源码（防止循环更新）
 let isSyncingFromWysiwyg = false;
 
+// 标记是否正在同步滚动（防止循环触发）
+let isSyncingScroll = false;
+
 // 初始化
 function init() {
   updatePreview();
@@ -777,9 +787,60 @@ function init() {
   // 初始化图片粘贴功能
   setupImagePaste();
   
+  // 初始化同步滚动功能
+  setupSyncScroll();
+  
   // 模式切换按钮事件
   wysiwygModeBtn.addEventListener('click', () => switchEditMode('wysiwyg'));
   sourceModeBtn.addEventListener('click', () => switchEditMode('source'));
+}
+
+// 设置同步滚动功能
+function setupSyncScroll() {
+  // 获取 CodeMirror 的滚动容器
+  const cmScroller = editor.getScrollerElement();
+  
+  // 编辑器滚动时同步预览区
+  cmScroller.addEventListener('scroll', () => {
+    if (isSyncingScroll || editMode === 'wysiwyg') return;
+    
+    isSyncingScroll = true;
+    
+    // 计算编辑器滚动百分比
+    const scrollTop = cmScroller.scrollTop;
+    const scrollHeight = cmScroller.scrollHeight - cmScroller.clientHeight;
+    const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+    
+    // 同步预览区滚动
+    const previewScrollHeight = preview.scrollHeight - preview.clientHeight;
+    preview.scrollTop = scrollPercent * previewScrollHeight;
+    
+    // 重置标志，使用 requestAnimationFrame 避免循环
+    requestAnimationFrame(() => {
+      isSyncingScroll = false;
+    });
+  });
+  
+  // 预览区滚动时同步编辑器
+  preview.addEventListener('scroll', () => {
+    if (isSyncingScroll || editMode === 'wysiwyg') return;
+    
+    isSyncingScroll = true;
+    
+    // 计算预览区滚动百分比
+    const scrollTop = preview.scrollTop;
+    const scrollHeight = preview.scrollHeight - preview.clientHeight;
+    const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+    
+    // 同步编辑器滚动
+    const cmScrollHeight = cmScroller.scrollHeight - cmScroller.clientHeight;
+    cmScroller.scrollTop = scrollPercent * cmScrollHeight;
+    
+    // 重置标志
+    requestAnimationFrame(() => {
+      isSyncingScroll = false;
+    });
+  });
 }
 
 // 切换编辑模式
@@ -849,14 +910,27 @@ function setupWysiwygEditing() {
       syncWysiwygToSource();
       markModified();
     }
-  }, 300));
+  }, 100));
+  
+  // 为代码块添加专门的输入监听（因为 code 元素有自己的 contenteditable）
+  // 注意：在 source 模式（双栏）下也需要同步
+  previewContent.addEventListener('input', (e) => {
+    if (e.target.closest('code[contenteditable="true"]')) {
+      // 使用防抖同步
+      clearTimeout(window._codeBlockSyncTimeout);
+      window._codeBlockSyncTimeout = setTimeout(() => {
+        syncWysiwygToSource();
+        markModified();
+      }, 100);
+    }
+  }, true); // 使用捕获阶段
   
   // 键盘快捷键
   previewContent.addEventListener('keydown', (e) => {
-    if (editMode !== 'wysiwyg') return;
-    
     // 检查是否在代码块内
     const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
     const anchorNode = selection.anchorNode;
     
     // 获取元素节点（如果是文本节点，取其父节点）
@@ -865,25 +939,29 @@ function setupWysiwygEditing() {
       element = anchorNode.parentNode;
     }
     
-    // 检查是否在 pre 或 code 元素内
-    const isInCodeBlock = element && (
-      element.closest('pre') || 
-      element.closest('code') ||
-      element.tagName === 'PRE' ||
-      element.tagName === 'CODE'
-    );
+    // 检查是否在代码块内（code 或 pre 元素内）
+    const codeElement = element && element.closest('code');
+    const preElement = element && element.closest('pre');
+    const isInCodeBlock = codeElement || preElement;
     
-    // 在代码块内按 Enter，插入普通换行而不是新段落
+    // 在代码块内按 Enter，插入换行符
     if (e.key === 'Enter' && !e.shiftKey && isInCodeBlock) {
       e.preventDefault();
       e.stopPropagation();
       
-      // 使用 insertHTML 插入换行
-      const br = document.createElement('br');
+      // 在光标位置插入换行符
       const range = selection.getRangeAt(0);
       range.deleteContents();
-      range.insertNode(document.createTextNode('\n'));
-      range.collapse(false);
+      
+      // 创建换行文本节点
+      const newline = document.createTextNode('\n');
+      range.insertNode(newline);
+      
+      // 将光标移动到换行符后面
+      range.setStartAfter(newline);
+      range.setEndAfter(newline);
+      selection.removeAllRanges();
+      selection.addRange(range);
       
       // 同步
       setTimeout(() => {
@@ -897,9 +975,26 @@ function setupWysiwygEditing() {
     if (e.key === 'Tab' && isInCodeBlock) {
       e.preventDefault();
       e.stopPropagation();
-      document.execCommand('insertText', false, '    ');
+      
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const spaces = document.createTextNode('    ');
+      range.insertNode(spaces);
+      range.setStartAfter(spaces);
+      range.setEndAfter(spaces);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // 同步
+      setTimeout(() => {
+        syncWysiwygToSource();
+        markModified();
+      }, 10);
       return;
     }
+    
+    // 以下快捷键只在 wysiwyg 模式下生效
+    if (editMode !== 'wysiwyg') return;
     
     // Cmd/Ctrl + B: 加粗
     if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
@@ -1809,8 +1904,6 @@ function updateView() {
       previewPane.style.flex = '1';
       editorPane.style.width = '';
       previewPane.style.width = '';
-      toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="8" height="18" rx="1" fill="currentColor"/><rect x="14" y="3" width="8" height="18" rx="1" fill="currentColor" opacity="0.4"/></svg>';
-      toggleBtn.dataset.tooltip = '当前：编辑+预览 (Cmd+E)';
       break;
     case 'editor':
       editorPane.style.display = 'flex';
@@ -1818,8 +1911,6 @@ function updateView() {
       resizer.style.display = 'none';
       editorPane.style.flex = '1';
       editorPane.style.width = '100%';
-      toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="20" height="18" rx="1" fill="currentColor"/><path d="M6 8h12M6 12h8M6 16h10" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>';
-      toggleBtn.dataset.tooltip = '当前：仅编辑 (Cmd+E)';
       break;
     case 'preview':
       editorPane.style.display = 'none';
@@ -1827,8 +1918,6 @@ function updateView() {
       resizer.style.display = 'none';
       previewPane.style.flex = '1';
       previewPane.style.width = '100%';
-      toggleBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><rect x="2" y="3" width="20" height="18" rx="1" fill="currentColor" opacity="0.4"/><path d="M6 8h12M6 12h8M6 16h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-      toggleBtn.dataset.tooltip = '当前：仅预览 (Cmd+E)';
       break;
   }
   editor.refresh(); // 刷新 CodeMirror 以适应大小变化
@@ -1919,8 +2008,7 @@ function setStatus(msg) {
   }, 3000);
 }
 
-// 按钮事件
-toggleBtn.addEventListener('click', toggleView);
+// 按钮事件已移至模式切换按钮
 
 // IPC 通信事件
 ipcRenderer.on('new-file', () => {

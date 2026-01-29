@@ -716,6 +716,20 @@ body {
     font-family: 'SF Mono', 'Monaco', 'Menlo', 'Fira Code', 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.6;
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    outline: none;
+}
+
+/* 可编辑代码块样式 */
+.markdown-body .code-block-wrapper pre code[contenteditable="true"] {
+    cursor: text;
+    min-height: 1.6em;
+}
+
+.markdown-body .code-block-wrapper pre code[contenteditable="true"]:focus {
+    outline: none;
 }
 
 /* 兼容旧的 pre 样式 */
