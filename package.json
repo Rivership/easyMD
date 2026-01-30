@@ -9,7 +9,8 @@
     "dev": "electron . --dev",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win"
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
   },
   "build": {
     "appId": "com.easymd.app",
@@ -19,6 +20,26 @@
       "icon": "icon.png",
       "target": [
         "dmg"
+      ],
+      "fileAssociations": [
+        {
+          "ext": "md",
+          "name": "Markdown Document",
+          "role": "Editor",
+          "icon": "icon.icns"
+        },
+        {
+          "ext": "markdown",
+          "name": "Markdown Document",
+          "role": "Editor",
+          "icon": "icon.icns"
+        },
+        {
+          "ext": "txt",
+          "name": "Text Document",
+          "role": "Editor",
+          "icon": "icon.icns"
+        }
       ]
     },
     "win": {
@@ -35,6 +56,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "linux": {
+      "icon": "icon.png",
+      "target": [
+        "tar.gz"
+      ],
+      "category": "Office"
     },
     "dmg": {
       "title": "easyMD",

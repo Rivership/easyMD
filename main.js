@@ -35,6 +35,7 @@ function loadSettings() {
   }
 }
 
+
 // 保存设置
 function saveSettings(newSettings) {
   settings = { ...settings, ...newSettings };
@@ -244,6 +245,11 @@ ipcMain.on('write-file', (event, filePath, content) => {
 // 处理打开文件按钮的请求
 ipcMain.on('open-file-request', () => {
   openFile();
+});
+
+// 处理重置文件路径的请求（新建文件时）
+ipcMain.on('reset-file-path', () => {
+  currentFilePath = null;
 });
 
 // 处理保存文件按钮的请求
@@ -477,9 +483,45 @@ function uploadToCustom(base64Data, url, token) {
   });
 }
 
+// 存储待打开的文件路径（应用启动前收到的）
+let fileToOpen = null;
+
+// macOS: 处理从 Finder 打开文件的事件
+app.on('open-file', (event, filePath) => {
+  event.preventDefault();
+  
+  if (mainWindow) {
+    // 窗口已存在，直接打开文件
+    openFileByPath(filePath);
+  } else {
+    // 窗口还未创建，存储路径等待窗口就绪后打开
+    fileToOpen = filePath;
+  }
+});
+
+// 通过路径打开文件
+function openFileByPath(filePath) {
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      dialog.showErrorBox('错误', '无法打开文件');
+      return;
+    }
+    currentFilePath = filePath;
+    mainWindow.webContents.send('file-opened', data, filePath);
+  });
+}
+
 app.whenReady().then(() => {
   loadSettings();
   createWindow();
+
+  // 窗口加载完成后，检查是否有待打开的文件
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (fileToOpen) {
+      openFileByPath(fileToOpen);
+      fileToOpen = null;
+    }
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

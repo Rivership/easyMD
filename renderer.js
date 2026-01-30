@@ -1942,6 +1942,8 @@ function newFile() {
   }
   editor.setValue('');
   fileName.textContent = '未命名.md';
+  currentDocPath = null; // 重置当前文档路径
+  ipcRenderer.send('reset-file-path'); // 通知主进程重置文件路径
   clearModified();
   updatePreview();
   updateStats();
